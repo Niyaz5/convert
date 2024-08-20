@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Crypto & Fiat Converter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1e1e2e;
+            color: #e3e3e3;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            padding: 20px;
+            background-color: #232946;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: #ffffff;
+        }
+
+        input, select, button {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin-bottom: 15px;
+            border: none;
+            border-radius: 5px;
+            outline: none;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        input, select {
+            background-color: #0f3460;
+            color: #ffffff;
+        }
+
+        button {
+            background-color: #e94560;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #d72342;
+        }
+
+        .result {
+            margin-top: 15px;
+            font-size: 18px;
+            color: #a0d4f7;
+        }
+
+        @media (max-width: 500px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            input, select, button {
+                width: calc(100% - 15px);
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Real-Time Crypto & Fiat Converter</h1>
+    <input type="number" id="amount" placeholder="Enter amount..." min="0" step="any">
+    <select id="fromCurrency">
+        <!-- Options will be dynamically populated -->
+    </select>
+    <select id="toCurrency">
+        <!-- Options will be dynamically populated -->
+    </select>
+    <button id="convert">Convert</button>
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const cryptoApiUrl = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,binancecoin,litecoin,dogecoin&vs_currencies=usd,eur";
+    const fiatApiUrl = "https://open.er-api.com/v6/latest/USD";  // Example using ExchangeRate-API
+
+    const fromCurrencySelect = document.getElementById('fromCurrency');
+    const toCurrencySelect = document.getElementById('toCurrency');
+    const resultDiv = document.getElementById('result');
+
+    let cryptoRates = {};
+    let fiatRates = {};
+    let fiatCurrencyDetails = {
+        "AED": "United Arab Emirates Dirham",
+        "USD": "United States Dollar",
+        "EUR": "Euro",
+        "GBP": "British Pound Sterling",
+        "INR": "Indian Rupee",
+        "JPY": "Japanese Yen",
+        "CNY": "Chinese Yuan",
+        "CAD": "Canadian Dollar",
+        "AUD": "Australian Dollar",
+        "ZAR": "South African Rand",
+        "BRL": "Brazilian Real",
+        "RUB": "Russian Ruble",
+        "MXN": "Mexican Peso",
+        "CHF": "Swiss Franc",
+        "SEK": "Swedish Krona",
+        "NOK": "Norwegian Krone",
+        "DKK": "Danish Krone",
+        "SGD": "Singapore Dollar",
+        "NZD": "New Zealand Dollar",
+        "HKD": "Hong Kong Dollar",
+        "MYR": "Malaysian Ringgit",
+        "THB": "Thai Baht",
+        "IDR": "Indonesian Rupiah",
+        "PHP": "Philippine Peso",
+        "KRW": "South Korean Won",
+        "TRY": "Turkish Lira",
+        "SAR": "Saudi Riyal",
+        "ARS": "Argentine Peso",
+        "PLN": "Polish Zloty",
+        "EGP": "Egyptian Pound",
+        "NPR": "Nepalese Rupee",
+        "PKR": "Pakistani Rupee",
+        "BDT": "Bangladeshi Taka",
+        // Add more currencies here as needed
+    };
+
+    // Fetch Crypto Rates
+    fetch(cryptoApiUrl)
+        .then(response => response.json())
+        .then(data => {
+            cryptoRates = data;
+            populateCryptoOptions();
+        })
+        .catch(error => {
+            console.error('Error fetching crypto rates:', error);
+            resultDiv.innerText = 'Error fetching crypto rates.';
+        });
+
+    // Fetch Fiat Rates
+    fetch(fiatApiUrl)
+        .then(response => response.json())
+        .then(data => {
+            fiatRates = data.rates;
+            populateFiatOptions();
+            setDefaultCurrencies();
+        })
+        .catch(error => {
+            console.error('Error fetching fiat rates:', error);
+            resultDiv.innerText = 'Error fetching fiat rates.';
+        });
+
+    function populateCryptoOptions() {
+        const cryptoList = Object.keys(cryptoRates);
+        cryptoList.forEach(crypto => {
+            const option = document.createElement('option');
+            option.value = crypto;
+            option.text = crypto.charAt(0).toUpperCase() + crypto.slice(1);
+            fromCurrencySelect.appendChild(option.cloneNode(true));
+            toCurrencySelect.appendChild(option.cloneNode(true));
+        });
+    }
+
+    function populateFiatOptions() {
+        Object.keys(fiatCurrencyDetails).forEach(fiat => {
+            const option = document.createElement('option');
+            option.value = fiat;
+            option.text = `${fiat} - ${fiatCurrencyDetails[fiat]}`;
+            fromCurrencySelect.appendChild(option.cloneNode(true));
+            toCurrencySelect.appendChild(option.cloneNode(true));
+        });
+    }
+
+    function setDefaultCurrencies() {
+        fromCurrencySelect.value = "USD";
+        toCurrencySelect.value = "INR";
+    }
+
+    document.getElementById('convert').addEventListener('click', function() {
+        const amount = parseFloat(document.getElementById('amount').value);
+        const fromCurrency = fromCurrencySelect.value;
+        const toCurrency = toCurrencySelect.value;
+
+        if (isNaN(amount) || amount <= 0) {
+            resultDiv.innerText = 'Please enter a valid amount.';
+            return;
+        }
+
+        let conversionRate;
+
+        if (cryptoRates[fromCurrency] && cryptoRates[fromCurrency][toCurrency]) {
+            conversionRate = cryptoRates[fromCurrency][toCurrency];
+        } else if (fiatRates[fromCurrency] && fiatRates[toCurrency]) {
+            conversionRate = fiatRates[toCurrency] / fiatRates[fromCurrency];
+        } else if (cryptoRates[fromCurrency] && fiatRates[toCurrency]) {
+            conversionRate = cryptoRates[fromCurrency]['usd'] * fiatRates[toCurrency];
+        } else if (fiatRates[fromCurrency] && cryptoRates[toCurrency]) {
+            conversionRate = fiatRates['usd'] / fiatRates[fromCurrency] / cryptoRates[toCurrency]['usd'];
+        } else {
+            resultDiv.innerText = 'Conversion not supported.';
+            return;
+        }
+
+        const convertedAmount = amount * conversionRate;
+        resultDiv.innerText = `${amount} ${fromCurrency} = ${convertedAmount.toFixed(2)} ${toCurrency}`;
+    });
+});
+</script>
+
+</body>
+</html>
